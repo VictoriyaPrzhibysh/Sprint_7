@@ -4,6 +4,7 @@ import io.restassured.response.Response;
 import model.CourierLoginRequestModel;
 import model.CourierModel;
 import org.hamcrest.Matchers;
+import org.junit.After;
 import org.junit.Test;
 
 import static data.CourierData.*;
@@ -11,6 +12,8 @@ import static org.hamcrest.Matchers.equalTo;
 import static steps.CourierSteps.*;
 
 public class CreateCourierTest extends BaseApiTest {
+
+    private CourierModel courier;
 
     @Test
     @DisplayName("Create Courier Success")
@@ -25,16 +28,6 @@ public class CreateCourierTest extends BaseApiTest {
                 .statusCode(201)
                 .body("ok", equalTo(true));
 
-        // 2. Логинимся, чтобы получить ID для удаления курьера
-        CourierLoginRequestModel loginRequest = new CourierLoginRequestModel(courier.getLogin(), courier.getPassword());
-        Response loginResponse = loginCourier(loginRequest);
-        Integer courierId = loginResponse.jsonPath().getInt("id");
-
-        // 3. Логинимся и удаляем курьера
-        deleteCourier(courierId)
-                .then()
-                .log().all()
-                .statusCode(200);
     }
 
     @Test
@@ -56,16 +49,7 @@ public class CreateCourierTest extends BaseApiTest {
                 .statusCode(409)
                 .body("message", Matchers.containsString("Этот логин уже используется"));
 
-        // 3. Логинимся и удаляем первого курьера
 
-        CourierLoginRequestModel loginRequest = new CourierLoginRequestModel(courier.getLogin(), courier.getPassword());
-        Response loginResponse = loginCourier(loginRequest);
-        Integer courierId = loginResponse.jsonPath().getInt("id");
-
-        deleteCourier(courierId)
-                .then()
-                .log().all()
-                .statusCode(200);
     }
 
     @Test
@@ -108,5 +92,24 @@ public class CreateCourierTest extends BaseApiTest {
                 .log().all()
                 .statusCode(400)
                 .body("message", equalTo("Недостаточно данных для создания учетной записи"));
+    }
+
+    @After
+
+    public void deleteCourierAfterTest() {
+        // проверяем, что курьер был создан и логинимся чтобы получить id для удаления курьера,
+        if (courier != null && courier.getLogin() != null && courier.getPassword() != null) {
+            CourierLoginRequestModel loginRequest =
+                    new CourierLoginRequestModel(courier.getLogin(), courier.getPassword());
+            Response loginResponse = loginCourier(loginRequest);
+            Integer courierId = loginResponse.jsonPath().getInt("id");
+            if (courierId != null) {
+        // Удаляем курьера
+        deleteCourier(courierId)
+                .then()
+                .log().all()
+                .statusCode(200);
+            }
+        }
     }
 }

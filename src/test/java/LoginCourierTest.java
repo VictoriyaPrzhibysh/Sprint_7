@@ -85,18 +85,13 @@ public class LoginCourierTest extends BaseApiTest {
     @Description("Проверяем, что система вернёт ошибку, если если поля пароль нет, запрос возвращает ошибку")
     public void testLoginCourierFailsWithoutPasswordField() {
         // Логинимся не заполняя поле пароль, но тест падает с ошибкой 504
-        String bodyWithoutPassword = "{\"login\": \"" + courier.getLogin() + "\"}";
+        CourierLoginRequestModel loginRequestWithoutPassword =
+                new CourierLoginRequestModel(courier.getLogin(), null);
 
-        Response response = given()
-                .contentType(ContentType.JSON)
-                .body(bodyWithoutPassword)
-                .when()
-                .post(COURIER_AUTHORIZATION_PATH);
-
+        Response response = loginCourier(loginRequestWithoutPassword);
         response
                 .then()
                 .log().all()
-                // Скорее всего 400
                 .statusCode(400)
                 .body("message", containsString("Недостаточно данных для входа"));
     }
@@ -106,14 +101,10 @@ public class LoginCourierTest extends BaseApiTest {
     @Description("Проверяем, что система вернёт ошибку, если если поля логин нет, запрос возвращает ошибку")
     public void testLoginCourierFailsWithoutLoginField() {
         // Логинимся не заполняя поле логин
-        String bodyWithoutLogin = "{\"password\": \"" + courier.getPassword() + "\"}";
+        CourierLoginRequestModel loginRequestWithoutLogin =
+                new CourierLoginRequestModel(null, courier.getPassword());
 
-        Response response = given()
-                .contentType(ContentType.JSON)
-                .body(bodyWithoutLogin)
-                .when()
-                .post(COURIER_AUTHORIZATION_PATH);
-
+        Response response = loginCourier(loginRequestWithoutLogin);
         response
                 .then()
                 .log().all()
